@@ -26,7 +26,7 @@ def initialize_phase1():
         param_manager.save_params(default_params)
     else:
         logger.error("ERROR: Parameter validation failed")
-        return False, None
+        return False, None, None, None
     
     logger.info("\n3. Performance Tracker initialization...")
     tracker = PerformanceTracker(DATA_DIR)
@@ -47,7 +47,7 @@ def initialize_phase1():
     logger.info("Phase 1 initialization complete!")
     logger.info("=" * 50)
     
-    return True, data_loader
+    return True, data_loader, param_manager, tracker
 
 def run_phase2(data_loader):
     logger.info("\n" + "=" * 50)
@@ -116,10 +116,29 @@ def run_phase4(data_loader):
     
     return training_results
 
+def run_phase5(data_loader, param_manager, performance_tracker):
+    logger.info("\n" + "=" * 50)
+    logger.info("Phase 5: Unified Simulator")
+    logger.info("=" * 50)
+    
+    from simulator.unified_simulator import UnifiedSimulator
+    
+    simulator = UnifiedSimulator(data_loader, param_manager, performance_tracker)
+    test_coins = COINS[:10]
+    logger.info(f"\nSimulating {len(test_coins)} coins...")
+    
+    results = simulator.simulate_all_coins(test_coins)
+    
+    logger.info("=" * 50)
+    logger.info("Phase 5 complete!")
+    logger.info("=" * 50)
+    
+    return results
+
 def main():
     logger.info(f"Starting: {Path(__file__).name}\n")
     
-    success, data_loader = initialize_phase1()
+    success, data_loader, param_manager, tracker = initialize_phase1()
     
     if not success or data_loader is None:
         logger.error("ERROR: Phase 1 initialization failed")
@@ -142,6 +161,15 @@ def main():
     
     if trained:
         logger.info(f"\nOK: {len(trained)} coins trained")
+    
+    logger.info("\nRunning Phase 5 (unified simulation with 10 coins)...")
+    unified_results = run_phase5(data_loader, param_manager, tracker)
+    
+    if unified_results:
+        logger.info(f"\nOK: Simulation complete")
+        logger.info(f"Total trades: {unified_results['summary']['total_trades']}")
+        logger.info(f"Win rate: {unified_results['summary']['win_rate']}%")
+        logger.info(f"Total profit: {unified_results['summary']['total_profit']}%")
     
     logger.info("\n" + "="*50)
     logger.info("All phases complete!")
