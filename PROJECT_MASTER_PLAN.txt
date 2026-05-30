@@ -1,5 +1,4 @@
-파일 1: PROJECT_MASTER_PLAN.md
-Copy# 암호화폐 자동거래봇 - AI 매매법 자동 최적화 시스템
+# 암호화폐 자동거래봇 - AI 매매법 자동 최적화 시스템
 ## 최종 프로젝트 마스터 플랜
 
 **작성일:** 2026-05-30
@@ -70,6 +69,7 @@ Copy# 암호화폐 자동거래봇 - AI 매매법 자동 최적화 시스템
 
 **핵심 원리:**
 
+
 $$\text{수익률} = w_1 \times \text{지표}_1 + w_2 \times \text{지표}_2 + \cdots + w_{30} \times \text{지표}_{30}$$
 
 회귀분석을 통해 최적 가중치 $w_1, w_2, \ldots, w_{30}$ 도출
@@ -121,6 +121,7 @@ $$\text{수익률} = w_1 \times \text{지표}_1 + w_2 \times \text{지표}_2 + \
 **목표:** 매주 파라미터 조합을 "진화"시켜 최적값 찾기
 
 **핵심 원리:**
+
 Copy
 세대 1: 100개 랜덤 조합 → 평가 → 상위 20% 선별 ↓ (교배 + 돌연변이) 세대 2: 새로운 100개 조합 → 평가 → 상위 20% 선별 ↓ ... 세대 30: 최고 성과 조합 도출
 
@@ -183,6 +184,7 @@ Copy
 
 **핵심 원리:**
 
+
 $$Q(s, a) \leftarrow Q(s, a) + \alpha [r + \gamma \max Q(s', a') - Q(s, a)]$$
 
 - $s$: 현재 상태 (30개 지표)
@@ -205,6 +207,7 @@ $$Q(s, a) \leftarrow Q(s, a) + \alpha [r + \gamma \max Q(s', a') - Q(s, a)]$$
 - 3: 진입 (포지션 크기 20%)
 
 **보상 함수 (Reward Function):**
+
 ```python
 def calculate_reward(entry_price, current_price, exit_price):
     profit_pct = (exit_price - entry_price) / entry_price
@@ -259,22 +262,20 @@ Phase 5: 통합 시뮬레이터 (2주)
 구조:
 
 CopyUnifiedSimulator
-├── RegressionOptimizer (초기화 시 1회)
-├── GeneticOptimizer (매주 1회)
-├── ReinforcementLearner (매분)
+├── RegressionOptimizer (초기화 시 1회 + 매월 1회)
+├── GeneticOptimizer (매주 1회 + 매월 1회)
+├── ReinforcementLearner (매분 + 월간 초기화)
 ├── DataLoader (실시간 데이터 수집)
 ├── PerformanceTracker (거래 기록)
 └── TelegramReporter (보고)
 실행 흐름:
 
 1단계: 초기화 (최초 1회)
-
 Copy1. 8년 과거 데이터 수집
 2. 회귀분석 실행 → initial_params.json 생성
 3. 각 코인별 ReinforcementLearner 인스턴스 생성
-4. (선택) 유전 알고리즘 초기 실행 → 미세 조정
+4. 유전 알고리즘 초기 실행 → 미세 조정
 2단계: 실시간 모의투자 루프 (매분)
-
 Copy매분:
   1. 1분 캔들 데이터 수집 (50개 코인)
   2. 지표 계산 (30개)
@@ -289,7 +290,6 @@ Copy매분:
   5. active_coins.json 갱신
   6. params_updated.json에 최신 파라미터 저장
 3단계: 주간 최적화 (매주 월요일 자정)
-
 Copy1. 지난주 모의투자 데이터 분석
 2. 유전 알고리즘 실행 (30세대)
    - 각 코인별 10개 최고 개체 선별
@@ -297,8 +297,14 @@ Copy1. 지난주 모의투자 데이터 분석
    - 최고 개체의 파라미터 추출
 3. weekly_optimized_params.json 갱신
 4. ReinforcementLearner의 Q-Table 선택적 리셋 또는 보존
-4단계: 일일 보고 (매일 자정)
-
+4단계: 월간 최적화 (매월 1일 자정) 🔥 새로 추가!
+Copy1. 8년 과거 데이터 + 최근 1개월 데이터 통합
+2. 회귀분석 재실행 → 지표 가중치 재계산
+3. 유전 알고리즘 재실행 (30세대)
+4. 강화학습 Q-Table 초기화
+5. monthly_optimized_params.json 생성
+6. ReinforcementLearner 재초기화 (모든 코인)
+5단계: 일일 보고 (매일 자정)
 Copy1. 일일 수익률 계산
 2. 승률 계산
 3. 최고 수익 코인 Top 5
@@ -308,7 +314,7 @@ Copy1. 일일 수익률 계산
 
 UnifiedSimulator 클래스
 main.py (전체 실행)
-scheduler.py (주간/일일 작업 스케줄링)
+scheduler.py (주간/월간/일일 작업 스케줄링)
 requirements.txt (의존성)
 필수 구현:
 
@@ -348,14 +354,12 @@ APScheduler 또는 schedule 라이브러리
 🚀 GitHub & Cloud 배포 계획
 Step 1: GitHub 저장소 생성 및 업로드
 1-1. GitHub에서 새 저장소 생성
-
 Copy1. https://github.com/new 접속
 2. Repository name: crypto-trading-bot-ai
 3. Description: AI-Powered Cryptocurrency Trading Bot with Auto Parameter Optimization
 4. Public 선택
 5. "Create repository" 클릭
 1-2. 로컬에서 git 초기화
-
 Copy# 프로젝트 폴더 이동
 cd /path/to/your/project
 
@@ -404,7 +408,6 @@ active_coins.json
 EOF
 Copy
 1-3. 파일 추가 및 커밋
-
 Copygit add .
 git commit -m "Initial commit: AI crypto trading bot project structure"
 
@@ -414,8 +417,7 @@ git remote add origin https://github.com/YOUR_USERNAME/crypto-trading-bot-ai.git
 # 업로드
 git branch -M main
 git push -u origin main
-1-4. README.md 작성 (GitHub에서 보일 것)
-
+1-4. README.md 작성
 Copy# 🤖 AI-Powered Cryptocurrency Trading Bot
 
 자동 매매법 최적화 시스템을 통한 50개 암호화폐 자동 거래봇
@@ -428,15 +430,12 @@ Copy# 🤖 AI-Powered Cryptocurrency Trading Bot
 - 텔레그램 실시간 보고
 
 ## 📊 프로젝트 구조
-crypto-trading-bot-ai/ ├── data/ │ ├── historical/ # 8년 과거 데이터 (Git 제외) │ └── current/ # 1분 캔들 실시간 데이터 (Git 제외) ├── src/ │ ├── modules/ │ │ ├── indicators.py # 30개 기술지표 │ │ ├── data_loader.py # 데이터 로딩 │ │ └── performance_tracker.py # 성과 추적 │ ├── optimizers/ │ │ ├── regression_optimizer.py # Phase 2 │ │ ├── genetic_optimizer.py # Phase 3 │ │ └── reinforcement_learner.py # Phase 4 │ ├── simulator/ │ │ ├── unified_simulator.py # 통합 시뮬레이터 │ │ └── position_manager.py # 포지션 관리 │ ├── reporter/ │ │ ├── telegram_reporter.py # 텔레그램 보고 │ │ └── performance_report.py # 성과 리포트 │ ├── config.py # 설정값 │ └── main.py # 메인 실행 ├── tests/ # 단위 테스트 ├── docs/ # 문서 ├── requirements.txt ├── .github/ │ └── workflows/ │ └── cloud-deploy.yml # GitHub Actions ├── docker/ │ └── Dockerfile # Google Cloud Run용 └── README.md
+crypto-trading-bot-ai/ ├── data/ │ ├── historical/ # 8년 과거 데이터 (Git 제외) │ └── current/ # 1분 캔들 실시간 데이터 (Git 제외) ├── src/ │ ├── modules/ │ │ ├── indicators.py │ │ ├── data_loader.py │ │ └── performance_tracker.py │ ├── optimizers/ │ │ ├── regression_optimizer.py │ │ ├── genetic_optimizer.py │ │ └── reinforcement_learner.py │ ├── simulator/ │ │ ├── unified_simulator.py │ │ └── position_manager.py │ ├── reporter/ │ │ ├── telegram_reporter.py │ │ └── performance_report.py │ ├── config.py │ └── main.py ├── tests/ ├── docs/ ├── docker/ │ └── Dockerfile ├── .github/ │ └── workflows/ │ └── deploy.yml ├── requirements.txt ├── PROJECT_MASTER_PLAN.md ├── IMPLEMENTATION_CHECKLIST.md └── README.md
 
 Copy
 ## ⚡ 빠른 시작
 ```bash
-# 설치
 pip install -r requirements.txt
-
-# 실행
 python src/main.py
 📈 아키텍처
 Phase 1: 기초 인프라
@@ -451,892 +450,369 @@ GitHub Actions CI/CD
 Copy
 ---
 
-### Step 2: Google Cloud Run 자동 배포 설정
+## ✅ 진행 상황 체크리스트
 
-**2-1. Google Cloud 프로젝트 생성**
-```bash
-# Google Cloud CLI 설치 (미설치 시)
-# https://cloud.google.com/sdk/docs/install 참고
+### Phase 1
+- [ ] 데이터 폴더 구조 정리
+- [ ] CSV 파일 8년 데이터 검증
+- [ ] DataLoader 구현
+- [ ] CoinParameterManager 구현
+- [ ] PerformanceTracker 구현
 
-# 로그인
-gcloud auth login
+### Phase 2
+- [ ] RegressionOptimizer 구현
+- [ ] 초기 파라미터 계산
+- [ ] initial_params.json 생성
 
-# 프로젝트 생성
-gcloud projects create crypto-trading-bot-PROJECT_ID
-gcloud config set project crypto-trading-bot-PROJECT_ID
+### Phase 3
+- [ ] GeneticOptimizer 구현
+- [ ] 유전 알고리즘 테스트
+- [ ] 병렬 처리 구현
 
-# 필수 API 활성화
-gcloud services enable run.googleapis.com
-gcloud services enable cloudbuild.googleapis.com
-gcloud services enable cloudscheduler.googleapis.com
-2-2. Dockerfile 작성
+### Phase 4
+- [ ] ReinforcementLearner 구현
+- [ ] Q-Learning 로직
+- [ ] ε-greedy 알고리즘
 
-CopyFROM python:3.11-slim
+### Phase 5
+- [x] 1단계: 초기화 (완료)
+- [ ] 2단계: 매분 실시간 거래 루프
+- [ ] 3단계: 매주 주간 재최적화
+- [ ] 4단계: 매월 월간 대규모 재최적화
+- [ ] 5단계: 매일 일일 보고
 
-WORKDIR /app
+### 배포
+- [ ] GitHub 저장소 생성
+- [ ] Dockerfile 작성
+- [ ] GitHub Actions 설정
+- [ ] Cloud Run 배포
+- [ ] Cloud Scheduler 설정
+- [ ] 텔레그램 봇 연동
 
-# 의존성 설치
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+---
 
-# 코드 복사
-COPY src/ ./src/
-COPY config.py .
+## 🔧 필수 설치 패키지 (requirements.txt)
+pandas2.2.0 numpy1.24.0 scikit-learn1.3.0 ccxt4.0.0 python-telegram-bot20.0 flask3.0.0 schedule1.2.0 APScheduler3.10.0 requests2.31.0 python-dotenv1.0.0
 
-# 환경변수 설정 (Cloud Run에서 자동)
-ENV TELEGRAM_TOKEN=$TELEGRAM_TOKEN
-ENV PORT=8080
-
-# 메인 실행
-CMD ["python", "src/main.py"]
-2-3. cloudbuild.yaml 작성
-
-Copysteps:
-  # Step 1: Docker 이미지 빌드
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      - 'build'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/crypto-trading-bot:latest'
-      - '-f'
-      - 'docker/Dockerfile'
-      - '.'
-
-  # Step 2: Docker 이미지를 Container Registry에 푸시
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      - 'push'
-      - 'gcr.io/$PROJECT_ID/crypto-trading-bot:latest'
-
-  # Step 3: Cloud Run에 배포
-  - name: 'gcr.io/cloud-builders/gke-deploy'
-    args:
-      - 'run'
-      - '--filename=.'
-      - '--image=gcr.io/$PROJECT_ID/crypto-trading-bot:latest'
-      - '--location=us-central1'
-
-  # Step 4: Cloud Run 서비스 배포 (gcloud CLI)
-  - name: 'gcr.io/cloud-builders/gcloud'
-    args:
-      - 'run'
-      - 'deploy'
-      - 'crypto-trading-bot'
-      - '--image'
-      - 'gcr.io/$PROJECT_ID/crypto-trading-bot:latest'
-      - '--region'
-      - 'us-central1'
-      - '--platform'
-      - 'managed'
-      - '--allow-unauthenticated'
-      - '--memory'
-      - '2Gi'
-      - '--cpu'
-      - '2'
-      - '--timeout'
-      - '3600'
-      - '--set-env-vars'
-      - 'TELEGRAM_TOKEN=$_TELEGRAM_TOKEN'
-
-images:
-  - 'gcr.io/$PROJECT_ID/crypto-trading-bot:latest'
-
-timeout: 1800s
-
-substitutions:
-  _TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}  # GitHub Secrets에서 주입
 Copy
-2-4. GitHub Actions CI/CD 설정
+---
 
-Copy# .github/workflows/deploy.yml
+## 📞 연락처 및 지원
+- 프로젝트 리더: jaehwimain
+- GitHub: https://github.com/jaehwimain/crypto-trading-system
+- 질문: Issues 탭 사용
 
-name: Deploy to Cloud Run
+마지막 업데이트: 2026-05-30
+상태: 설계 완료 → 구현 시작 예정
 
-on:
-  push:
-    branches: [ main ]
+---
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+---
 
-    steps:
-    - uses: actions/checkout@v3
+## ----------------수정-1----------------
 
-    - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@v1
-      with:
-        project_id: ${{ secrets.GCP_PROJECT_ID }}
-        service_account_key: ${{ secrets.GCP_SA_KEY }}
-        export_default_credentials: true
+## 📌 **핵심 개념 수정 (중요: 반복 최적화 흐름)**
 
-    - name: Configure Docker authentication
-      run: |
-        gcloud auth configure-docker gcr.io
+### ❌ **이전 이해 (잘못된 것)**
+과거 백테스트 (1회 초기화) → 파라미터 결정 → 실시간 데이터 적용 → 강화학습으로만 미세 조정
 
-    - name: Build Docker image
-      run: |
-        docker build -f docker/Dockerfile \
-          -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/crypto-trading-bot:latest \
-          .
-
-    - name: Push to Container Registry
-      run: |
-        docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/crypto-trading-bot:latest
-
-    - name: Deploy to Cloud Run
-      run: |
-        gcloud run deploy crypto-trading-bot \
-          --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/crypto-trading-bot:latest \
-          --region us-central1 \
-          --platform managed \
-          --allow-unauthenticated \
-          --memory 2Gi \
-          --cpu 2 \
-          --timeout 3600 \
-          --set-env-vars "TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }}"
 Copy
-2-5. GitHub Secrets 설정
+**문제:** 과거 데이터 분석을 1회만 하고 끝내므로, 시장 변화에 대응하지 못함
 
-Copy# GitHub 리포지토리 Settings → Secrets → New repository secret
+---
 
-# 필요한 Secrets:
-1. GCP_PROJECT_ID: your-project-id
-2. GCP_SA_KEY: (Google Cloud Service Account 키 JSON)
-3. TELEGRAM_TOKEN: your-telegram-bot-token
-2-6. Cloud Scheduler 설정 (주간 + 일일 작업)
+### ✅ **수정된 이해 (올바른 것 - 당신의 지적)**
+과거 백테스팅 (반복 최적화) ← 여러 파라미터 조합으로 반복 시도 ↓ 실시간 데이터 적용 + 검증 ← "과거 최고"가 현재에도 통하는가? ↓ 매주/매월 재최적화 ← 과거 데이터를 다시 분석 + 현재 데이터 추가 ↓ 무한 반복 (승률 ↑, 손실률 ↓)
 
-Copy# Cloud Scheduler 작업 생성
-gcloud scheduler jobs create app-engine crypto-trading-scheduler \
-  --location us-central1 \
-  --schedule "0 0 * * *" \
-  --http-method POST \
-  --uri "https://YOUR_CLOUD_RUN_URL/daily-report" \
-  --headers "Authorization:Bearer $(gcloud auth print-identity-token)"
+Copy
+**핵심:** 
+- 과거 백테스팅은 **초기화 1회가 아니라 매주/매월 반복**
+- 과거와 현재 데이터를 **지속적으로 재조합**하여 최적 파라미터 탐색
+- 3가지 최적화 단계 (회귀, 유전, 강화)가 **모두 반복 실행**
 
-# 주간 유전 알고리즘 실행
-gcloud scheduler jobs create app-engine crypto-trading-genetic \
-  --location us-central1 \
-  --schedule "0 0 * * 1" \
-  --http-method POST \
-  --uri "https://YOUR_CLOUD_RUN_URL/weekly-optimize" \
-  --headers "Authorization:Bearer $(gcloud auth print-identity-token)"
-Step 3: 텔레그램 봇 연동
-3-1. 텔레그램 봇 생성
+---
 
-CopyBotFather와 대화:
-/start
-/newbot
-봇 이름 입력: Crypto Trading Bot
-봇 사용자명 입력: crypto_trading_yourname_bot
+## 🏗️ **Phase 5: 올바른 실행 흐름 (수정됨)**
 
-→ 토큰 획득: 123456789:ABCdefGHIjklmnoPQRstuvWXYZ_1a2b3c4d
-3-2. Webhook 설정 (Cloud Run과 텔레그램 연동)
+### **1단계: 초기화 (최초 1회)** ✅ 완료
 
-Copy# Telegram에 Webhook 등록
-curl -X POST https://api.telegram.org/bot$TELEGRAM_TOKEN/setWebhook \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "url": "https://YOUR_CLOUD_RUN_URL/telegram-webhook",
-    "allowed_updates": ["message"]
-  }'
-3-3. 텔레그램 메시지 형식 (telegram_reporter.py)
+**목표:** 8년 과거 데이터로 초기 파라미터 생성
 
-Copydef send_daily_report(chat_id):
-    """일일 보고 메시지"""
-    message = f"""
-📊 **Daily Trading Report** - {date}
+1-1. 8년 과거 데이터 수집 (50개 코인 × 420만 행) 1-2. 회귀분석 (Phase 2) → 30개 지표의 가중치 계산 → initial_params.json 생성 1-3. 유전알고리즘 (Phase 3) → 30세대 진화로 파라미터 조합 최적화 1-4. 강화학습 (Phase 4) → 과거 데이터로 Q-Table 사전학습 → q_table.pkl 생성
 
-✅ **성공 거래:** {win_count}
-❌ **실패 거래:** {loss_count}
-📈 **승률:** {win_rate:.1f}%
-💰 **순수익:** ${net_profit:.2f}
-📉 **최대낙폭:** {max_drawdown:.1f}%
+산출물:
 
-🏆 **Top 5 수익 코인:**
-1. BTC: +5.2% (+$250)
-2. ETH: +3.8% (+$180)
-...
-
-⚠️ **Top 5 손실 코인:**
-1. DOGE: -2.1% (-$100)
-2. ADA: -1.5% (-$75)
-...
-
-⚙️ **파라미터 조정:**
-- 회귀분석: OK
-- 유전 알고리즘: 대기 중 (월요일 실행)
-- 강화학습: 진행 중 (학습률: 0.01)
-"""
-    send_telegram_message(chat_id, message)
-📋 데이터 구조
 initial_params.json (50개 코인 × 초기 파라미터)
-Copy{
-  "BTC": {
-    "weights": {
-      "rsi": 0.15,
-      "macd": 0.12,
-      "bollinger_upper": 0.08,
-      ...
-    },
-    "entry_threshold": 65,
-    "stop_loss_pct": -2.0,
-    "take_profit_pct": 5.0,
-    "position_size_pct": 10.0,
-    "max_positions": 5
-  },
-  "ETH": { ... },
-  ...
-}
+q_table.pkl (50개 코인 × Q값 테이블)
+genetic_best_individuals.json (최고 개체 기록)
+결과: 309거래, 53.72% 승률, 35.43% 수익 → "이것이 과거 데이터의 최고 성과 (기준점)"
+
+Copy
+---
+
+### **2단계: 실시간 검증 + 강화학습 (매분)** 🚀 지금부터!
+
+**목표:** 초기 파라미터가 현재 시장에서도 통하는지 검증 + 미세 조정
+
+매분 실행: 2-1. 1분 캔들 데이터 수집 (50개 코인) 2-2. 30개 지표 계산 2-3. 신호 생성 - 회귀분석 가중치로 종합 점수 계산 (0~100) - 점수 >= 임계값 → 진입 신호 2-4. 거래 실행 - 진입/청산 - 손절/익절 체크 - 수익/손실 계산 2-5. 강화학습 (Q-Learning) - 상태 이산화 (10개 핵심 지표 5단계) - Q값 업데이트 - ε-greedy로 행동 선택 2-6. 파라미터 저장 - active_coins.json (현재 진입 중인 코인) - realtime_performance.json (거래 기록)
+
+산출물:
+
 realtime_performance.json (실시간 거래 기록)
-Copy{
-  "trades": [
-    {
-      "coin": "BTC",
-      "entry_time": "2026-05-30T10:30:00Z",
-      "entry_price": 65000,
-      "exit_time": "2026-05-30T11:45:00Z",
-      "exit_price": 65300,
-      "profit_loss_pct": 0.46,
-      "method": "regression"  # regression, genetic, reinforcement
-    },
-    ...
-  ],
-  "summary": {
-    "total_trades": 125,
-    "win_count": 78,
-    "loss_count": 47,
-    "win_rate": 0.624,
-    "total_profit": 1250.50
-  }
-}
-active_coins.json (현재 진입 중인 코인)
-Copy{
-  "active": [
-    {
-      "coin": "BTC",
-      "entry_time": "2026-05-30T14:22:00Z",
-      "entry_price": 65100,
-      "current_price": 65250,
-      "position_size": 0.1,
-      "unrealized_pnl": 23.08,
-      "signal_score": 78
-    },
-    ...
-  ],
-  "last_updated": "2026-05-30T14:23:00Z"
-}
-✅ 진행 상황 체크리스트
-Phase 1
- 데이터 폴더 구조 정리
- CSV 파일 8년 데이터 검증
- DataLoader 구현
- CoinParameterManager 구현
- PerformanceTracker 구현
-Phase 2
- RegressionOptimizer 구현
- 초기 파라미터 계산
- initial_params.json 생성
-Phase 3
- GeneticOptimizer 구현
- 유전 알고리즘 테스트
- 병렬 처리 구현
-Phase 4
- ReinforcementLearner 구현
- Q-Learning 로직
- ε-greedy 알고리즘
-Phase 5
- UnifiedSimulator 구현
- 스케줄러 설정
- 통합 테스트
-배포
- GitHub 저장소 생성
- Dockerfile 작성
- Cloud Build 설정
- GitHub Actions 설정
- Cloud Scheduler 설정
- 텔레그램 봇 연동
-🔧 필수 설치 패키지 (requirements.txt)
-Copypandas==2.2.0
-numpy==1.24.0
-scikit-learn==1.3.0
-ccxt==4.0.0
-python-telegram-bot==20.0
-flask==3.0.0
-schedule==1.2.0
-APScheduler==3.10.0
-requests==2.31.0
-python-dotenv==1.0.0
-📞 연락처 및 지원
-프로젝트 리더: [Your Name]
-GitHub: https://github.com/YOUR_USERNAME/crypto-trading-bot-ai
-질문: Issues 탭 사용
-마지막 업데이트: 2026-05-30 상태: 설계 완료 → 구현 시작 예정
+active_coins.json (현재 활성 포지션)
+params_updated.json (강화학습으로 조정된 Q값)
+Copy
+---
+
+### **3단계: 주간 재최적화 (매주 월요일 자정)** ⭐ 핵심 단계!
+
+**목표:** 지난주 거래 결과를 바탕으로 파라미터 재최적화
+(과거 최고 vs 현재 최고 비교 → 더 나은 것 선택)
+
+매주 월요일 자정 실행:
+
+3-1. 지난주 거래 데이터 분석 - 거래 수: N건 - 승률: X% - 수익률: Y% - 최고 수익 지표 분석 - 최고 손실 원인 분석
+
+3-2. 유전알고리즘 재실행 (30세대) - 초기 세대: 100개 랜덤 파라미터 조합 - Fitness 평가: 지난주 거래 데이터로 백테스트 - 30세대 진화 - 최고 개체 선별
+
+3-3. 비교 분석 - 과거 최고: initial_params.json (승률: 53.72%) - 현재 최고: weekly_optimized_params.json (승률: ?) - 어느 것이 더 나은가? 비교
+
+3-4. 파라미터 업데이트 - 현재 최고 > 과거 최고 → weekly_optimized_params.json으로 교체 - 현재 최고 <= 과거 최고 → initial_params.json 유지 또는 하이브리드 적용
+
+3-5. 강화학습 Q-Table 선택적 조정 - 완전 리셋: 새로운 환경 학습 - 또는 보존: 기존 학습 유지
+
+산출물:
+
+weekly_optimized_params.json (현재주 최고 파라미터)
+weekly_optimization_report.json (비교 분석 결과)
+다음주 적용: 새로운 파라미터로 거래 시작
 
 Copy
 ---
 
-## **파일 2: IMPLEMENTATION_CHECKLIST.md**
+### **4단계: 월간 대규모 재최적화 (매월 1일 자정)** 🔥 새로 추가!
 
-```markdown
-# 🛠️ 구현 체크리스트 및 진행 상황
+**목표:** 시장 변화 반영 + 대규모 파라미터 재조정
+(과거 8년 데이터 + 현재 1개월 데이터를 통합 분석)
 
-## Phase 1: 기초 인프라 (예상 1~2주)
+매월 1일 자정 실행:
 
-### 1.1 데이터 폴더 정리
-- [ ] `data/historical/` 폴더 확인 (47개 코인, 8년 데이터)
-- [ ] `data/current/` 폴더 확인 (46개 코인, 1분 캔들)
-- [ ] 각 CSV 파일 형식 검증 (timestamp, OHLCV)
-- [ ] 누락된 데이터 확인 및 보충
-- [ ] 50개 코인 최종 목록 확정
+4-1. 데이터 통합 - 8년 과거 데이터 (기존) - 최근 1개월 실시간 거래 데이터 (새로운 시장 정보) - 통합 데이터셋 생성
 
-### 1.2 데이터 로더 구현 (`src/modules/data_loader.py`)
-```python
-class DataLoader:
-    def load_historical_data(coin, start_date, end_date):
-        """과거 8년 데이터 로드"""
-    
-    def load_current_data(coin):
-        """최근 1분 캔들 로드"""
-    
-    def validate_data(df):
-        """데이터 검증 (결측치, 형식)"""
-    
-    def normalize_data(df):
-        """0~100 범위로 정규화"""
- 함수 구현 완료
- 테스트 코드 작성
- 모든 50개 코인 테스트
-1.3 파라미터 관리자 구현 (src/modules/parameter_manager.py)
-Copyclass CoinParameterManager:
-    def __init__(self):
-        """50개 코인의 파라미터 관리"""
-    
-    def save_params(filename):
-        """JSON으로 저장"""
-    
-    def load_params(filename):
-        """JSON에서 로드"""
-    
-    def get_coin_params(coin):
-        """특정 코인의 파라미터"""
-    
-    def update_coin_params(coin, new_params):
-        """파라미터 업데이트"""
- 클래스 구현 완료
- JSON 저장/로드 테스트
- 50개 코인 모두 관리 가능 확인
-1.4 성과 추적 시스템 (src/modules/performance_tracker.py)
-Copyclass PerformanceTracker:
-    def __init__(self):
-        """거래 기록 및 성과 추적"""
-    
-    def record_trade(coin, entry_price, exit_price, entry_time, exit_time):
-        """거래 기록"""
-    
-    def calculate_metrics():
-        """승률, 손실률, 수익률 계산"""
-    
-    def save_performance(filename):
-        """JSON으로 저장"""
-    
-    def get_daily_summary():
-        """일일 요약"""
-    
-    def get_weekly_summary():
-        """주간 요약"""
- 클래스 구현 완료
- 거래 기록 기능 테스트
- 통계 계산 검증
-1.5 설정 파일 (src/config.py)
-Copy# 기본 설정
-COINS = [...]  # 50개 코인 목록
-TIMEFRAME = "1m"  # 1분 캔들
-BACKTEST_YEARS = 8
+4-2. 회귀분석 재실행 (Phase 2) ← 중요! - 통합 데이터로 30개 지표 가중치 재계산 - "현재 시장에서 어떤 지표가 중요한가?" - 지표 가중치 순서 변경 가능 → monthly_regression_weights.json 생성
 
-# 회귀분석
-REGRESSION_TOP_INDICATORS = 15
+4-3. 유전알고리즘 30세대 재실행 (Phase 3) - 새로운 회귀분석 가중치로 시작 - 30세대 진화 - 최고 개체 선별 → monthly_optimized_params.json 생성
 
-# 유전 알고리즘
-GA_POPULATION_SIZE = 100
-GA_GENERATIONS = 30
-GA_MUTATION_RATE = 0.05
+4-4. 강화학습 Q-Table 초기화 (Phase 4) - 새로운 시장 환경에 적응하기 위해 초기화 - 50개 코인별 새로운 Q-Table 생성 - 초기 사전학습 시작
 
-# 강화학습
-RL_LEARNING_RATE = 0.01
-RL_DISCOUNT_FACTOR = 0.9
-RL_EPSILON_START = 0.3
-RL_EPSILON_DECAY = 0.99
+4-5. 종합 비교 - 과거 최고 (8년 데이터): 53.72% - 주간 최고 (최근 1주): 61.1% - 월간 최고 (최근 1개월): 64.5% → 3개 버전 중 최고 선택
 
-# 거래 설정
-DEFAULT_POSITION_SIZE_PCT = 10
-DEFAULT_STOP_LOSS_PCT = -2.0
-DEFAULT_TAKE_PROFIT_PCT = 5.0
-MAX_POSITIONS_PER_COIN = 5
+4-6. 최종 파라미터 결정 - 다음 달부터 적용할 파라미터 확정 - 각 코인별 세부 조정
 
-# 텔레그램
-TELEGRAM_TOKEN = "YOUR_TOKEN"
-TELEGRAM_CHAT_ID = "YOUR_CHAT_ID"
+산출물:
 
-# Google Cloud
-GCP_PROJECT_ID = "your-project-id"
-GCP_REGION = "us-central1"
-Copy
- 모든 설정값 정의
- 환경변수 연동 (.env 파일)
-1.6 통합 테스트
- 데이터 로더 + 파라미터 관리자 + 성과 추적 연동 테스트
- 50개 코인 전체 데이터 로드 확인
- 모의 거래 데이터 기록 확인
-Phase 2: 회귀분석 모듈 (예상 1주)
-2.1 기술지표 계산 (src/modules/indicators.py)
- 30개 지표 모두 구현 (기존 파일 검토)
- 각 지표 0~100 범위 정규화
- 성능 최적화 (캐싱 등)
-2.2 회귀분석 최적화 (src/optimizers/regression_optimizer.py)
-Copyclass RegressionOptimizer:
-    def analyze_historical_data(coin):
-        """8년 데이터 분석 → 지표별 상관계수"""
-    
-    def calculate_correlation_matrix(coin):
-        """수익률과 30개 지표의 상관계수"""
-    
-    def fit_regression(coin):
-        """선형 회귀 적용"""
-    
-    def extract_weights(coin):
-        """회귀계수 → 정규화된 가중치"""
-    
-    def save_initial_params():
-        """initial_params.json 생성"""
- 클래스 구현 완료
- 50개 코인 전체 분석 (시간 예상: ~30분)
- initial_params.json 생성 및 검증
- 결과 리포트 생성 (지표 중요도 순위)
-2.3 결과 검증
- R² 값 > 0.6 확인 (코인별)
- 가중치 합계 = 1.0 확인
- 음수 가중치 제거 확인
- Top 15 지표 외 나머지 0으로 설정 확인
-Phase 3: 유전 알고리즘 모듈 (예상 2주)
-3.1 개체 표현 정의
-Copyclass Individual:
-    def __init__(self):
-        self.weights = {}  # 30개 지표 가중치
-        self.entry_threshold = random.uniform(50, 80)
-        self.stop_loss_pct = random.uniform(-5, -0.5)
-        self.take_profit_pct = random.uniform(3, 20)
-        self.position_size_pct = random.uniform(1, 20)
-        self.max_positions = random.randint(1, 10)
- Individual 클래스 구현
- 파라미터 범위 설정 (각 코인별 약간 다를 수 있음)
-3.2 Fitness 평가 함수
-Copyclass GeneticOptimizer:
-    def evaluate_fitness(individual, coin):
-        """한 개체를 백테스팅 → 승률 반환"""
-        # 과거 데이터로 해당 개체로 거래했을 때의 성과
-        # fitness = 승률 또는 샤프 비율
- Fitness 함수 구현
- 병렬 처리 구현 (multiprocessing 사용)
- 성능 최적화 (캐싱)
-3.3 선택, 교배, 돌연변이 구현
-Copydef selection(population, fitness_scores):
-    """상위 20% 선별"""
-
-def crossover(parent1, parent2):
-    """부모 2개 → 자식 생성"""
-
-def mutate(individual, mutation_rate=0.05):
-    """일부 파라미터 변경"""
- 세 함수 구현
- 테스트 (작은 세대부터 시작)
-3.4 유전 알고리즘 메인 루프
-Copydef evolve(coin, generations=30):
-    """30세대 진화"""
-    population = [Individual() for _ in range(100)]
-    
-    for gen in range(generations):
-        fitness_scores = [evaluate_fitness(ind) for ind in population]
-        best = population[argmax(fitness_scores)]
-        
-        selected = selection(population, fitness_scores)
-        new_population = []
-        while len(new_population) < 100:
-            p1, p2 = random.sample(selected, 2)
-            child = crossover(p1, p2)
-            child = mutate(child)
-            new_population.append(child)
-        
-        population = new_population
-        print(f"Gen {gen}: Best fitness = {max(fitness_scores)}")
-    
-    return population[argmax(fitness_scores)]
- 메인 루프 구현
- 로깅 및 모니터링
- 수렴 판정 로직
-3.5 통합 및 테스트
- 1개 코인에 대해 30세대 완전 실행
- 결과 검증 (성과 개선 확인)
- 50개 코인 순차 실행 (총 시간 예상: ~4시간)
- 결과 저장 (weekly_optimized_params.json)
-Phase 4: 강화학습 모듈 (예상 3주)
-4.1 상태 이산화
-Copyclass ReinforcementLearner:
-    def select_key_indicators():
-        """30개 중 10개 핵심 지표 선별"""
-        # 예: RSI, MACD, Bollinger, CCI, Stochastic, ...
-    
-    def discretize_state(indicators_dict):
-        """10개 지표를 5단계로 이산화 → 상태 코드"""
-        # 각 지표 0~100 → 5단계 (0, 1, 2, 3, 4)
-        # 예: state_code = "42031" (10자리)
- 10개 핵심 지표 선별
- 이산화 함수 구현
- 상태 코드 생성 함수
-4.2 Q-Table 초기화
-Copydef __init__(self):
-    self.q_table = {}  # defaultdict로 구현
-    # (state_code, action) → Q값
-    # 예: ("42031", 2) → 5.3
-    
-def get_q_value(state, action):
-    """Q값 조회 (없으면 0)"""
-    return self.q_table.get((state, action), 0.0)
- Q-Table 자료구조 설계
- 초기화 로직
-4.3 Q값 업데이트 로직
-Copydef update_q_value(state, action, reward, next_state):
-    """Q-Learning 알고리즘"""
-    current_q = self.get_q_value(state, action)
-    next_q = max([self.get_q_value(next_state, a) 
-                  for a in actions], default=0.0)
-    
-    new_q = current_q + self.learning_rate * (
-        reward + self.discount_factor * next_q - current_q
-    )
-    
-    self.q_table[(state, action)] = new_q
- 함수 구현
- 학습률 및 할인 계수 설정
-4.4 ε-greedy 정책
-Copydef choose_action(state):
-    """ε-greedy로 행동 선택"""
-    if random.random() < self.epsilon:
-        # 탐험: 랜덤 행동
-        return random.choice(actions)
-    else:
-        # 활용: 최고 Q값 행동
-        return argmax([self.get_q_value(state, a) for a in actions])
- ε-greedy 구현
- ε 감쇠 로직
-4.5 사전학습 (Pretraining)
-Copydef pretrain(coin, weeks=1):
-    """과거 데이터로 사전학습 (1주일분)"""
-    historical_data = load_historical_data(coin, weeks=1)
-    
-    for candle in historical_data:
-        state = discretize_state(candle)
-        action = choose_action(state)
-        reward = simulate_trade(action, candle)
-        next_state = discretize_state(next_candle)
-        
-        update_q_value(state, action, reward, next_state)
-    
-    save_q_table(coin)
- 사전학습 함수 구현
- 50개 코인 사전학습 (예상 시간: ~1주일)
-4.6 실시간 학습
-Copydef realtime_update(state, action, reward, next_state):
-    """거래 후 Q값 실시간 업데이트"""
-    update_q_value(state, action, reward, next_state)
-    save_q_table()  # 주기적으로 저장
- 실시간 업데이트 로직
- 체크포인트 저장
-Phase 5: 통합 시뮬레이터 (예상 2주)
-5.1 UnifiedSimulator 클래스
-Copyclass UnifiedSimulator:
-    def __init__(self):
-        self.regression = RegressionOptimizer()
-        self.genetic = GeneticOptimizer()
-        self.reinforcement = {}  # 50개 코인별 RL
-        self.data_loader = DataLoader()
-        self.performance = PerformanceTracker()
-    
-    def initialize():
-        """초기화: 회귀분석 + RL 사전학습"""
-    
-    def realtime_loop():
-        """매분 실행: 신호 생성 + 거래"""
-    
-    def weekly_optimize():
-        """매주 실행: 유전 알고리즘"""
-    
-    def daily_report():
-        """매일 실행: 일일 보고"""
- 클래스 구조 설계
- 각 메서드 구현
-5.2 신호 생성 로직
-Copydef generate_signal(coin):
-    """회귀분석 가중치로 종합 신호 점수 계산"""
-    indicators = calculate_indicators(coin)
-    params = parameter_manager.get_coin_params(coin)
-    
-    score = sum([
-        params['weights'][ind_name] * indicators[ind_name]
-        for ind_name in params['weights'].keys()
-    ])  # 0~100 범위
-    
-    return score
- 신호 생성 함수 구현
- 점수 정규화 (0~100)
-5.3 거래 관리 로직
-Copyclass PositionManager:
-    def enter_position(coin, size):
-        """포지션 진입"""
-    
-    def exit_position(coin, reason="profit"):
-        """포지션 청산"""
-    
-    def check_stop_loss(coin):
-        """손절 체크"""
-    
-    def check_take_profit(coin):
-        """익절 체크"""
-    
-    def get_active_positions():
-        """현재 활성 포지션"""
- PositionManager 클래스 구현
- 모든 메서드 구현
-5.4 스케줄러 설정
-Copyfrom apscheduler.schedulers.background import BackgroundScheduler
-
-scheduler = BackgroundScheduler()
-
-# 매분: 실시간 거래
-scheduler.add_job(simulator.realtime_loop, 'interval', minutes=1)
-
-# 매주 월요일 00:00: 유전 알고리즘
-scheduler.add_job(simulator.weekly_optimize, 'cron', 
-                  day_of_week='mon', hour=0, minute=0)
-
-# 매일 00:00: 일일 보고
-scheduler.add_job(simulator.daily_report, 'cron', 
-                  hour=0, minute=0)
-
-scheduler.start()
- APScheduler 설정
- 각 작업 스케줄 확인
-5.5 통합 테스트
- 데이터 로드 확인
- 신호 생성 확인
- 거래 기록 확인
- 성과 계산 확인
- 1시간 실시간 모의 실행
- 1일 실시간 모의 실행
-배포 및 운영
-6.1 GitHub 업로드
- GitHub 저장소 생성
- .gitignore 설정
- 초기 커밋
- README.md 작성
-6.2 Docker 설정
- Dockerfile 작성
- docker-compose.yml 작성 (로컬 테스트)
- 로컬에서 Docker 테스트
-6.3 Google Cloud 설정
- GCP 프로젝트 생성
- Cloud Build 설정
- Cloud Run 배포
- Cloud Scheduler 설정
-6.4 텔레그램 연동
- 봇 생성 및 토큰 획득
- Webhook 설정
- 메시지 형식 정의
- 실시간 알림 테스트
-6.5 모니터링 및 로깅
- Cloud Logging 설정
- 에러 알림 설정
- 성과 대시보드 구성
-예상 일정
-Phase	기간	시작	완료	상태
-1	1~2주	-	-	예정
-2	1주	-	-	예정
-3	2주	-	-	예정
-4	3주	-	-	예정
-5	2주	-	-	예정
-배포	1주	-	-	예정
-합계	약 10~12주			
-주의사항
-⚠️ 중요:
-
-매 Phase 완료 후 반드시 테스트 및 검증
-데이터 손실 방지 (정기적 백업)
-에러 로깅 및 예외 처리 필수
-코드 리뷰 및 문서화
-운영 전 충분한 백테스팅
-최종 업데이트: 2026-05-30 담당자: [Your Name]
+monthly_regression_weights.json (재계산된 지표 가중치)
+monthly_optimized_params.json (월간 최고 파라미터)
+monthly_comparison_report.json (종합 비교 분석)
+monthly_market_analysis.json (시장 변화 분석)
+다음달 적용: 새로운 파라미터 + 새로운 Q-Table로 거래
 
 Copy
 ---
 
-이제 이 두 파일을 **당신의 프로젝트 폴더에 저장**하고, **GitHub에 업로드하는 방법**을 알려드리겠습니다.
+### **5단계: 일일 보고 (매일 자정)** 📊
 
-## 🚀 **GitHub 업로드 단계별 가이드**
+**목표:** 일일 성과 추적 + 텔레그램 알림
 
-### **Step 0: Git 설치 확인**
+매일 자정 실행:
 
-```bash
-# 터미널/CMD에서:
-git --version
+5-1. 일일 통계 계산 - 거래 수 - 승률 - 수익률 - 최고 수익 코인 Top 5 - 최고 손실 코인 Top 5
 
-# 만약 설치 안 됨: https://git-scm.com/download 에서 설치
-Step 1: GitHub에서 새 저장소 생성
-https://github.com/new 접속
-Repository name: crypto-trading-bot-ai
-Description: AI-Powered Cryptocurrency Trading Bot with Auto Parameter Optimization
-Public 선택
-.gitignore: Python 선택
-Create repository 클릭
-→ 리포지토리 URL 복사: https://github.com/YOUR_USERNAME/crypto-trading-bot-ai.git
+5-2. 텔레그램 메시지 발송 - 일일 요약 - 주간/월간 추세 - 주의 필요 코인 알림
 
-Step 2: 로컬 git 설정
-Copy# 프로젝트 폴더로 이동
-cd /path/to/your/crypto-trading-bot
+산출물:
 
-# Git 초기화
-git init
-
-# 사용자 설정 (처음 한 번만)
-git config user.name "Your Name"
-git config user.email "your.email@gmail.com"
-
-# 또는 전역 설정
-git config --global user.name "Your Name"
-git config --global user.email "your.email@gmail.com"
-Step 3: .gitignore 파일 생성
-프로젝트 폴더의 최상단에 .gitignore 파일 생성:
-
-Copy# Windows/Mac
-오른쪽 클릭 → 새 파일 → .gitignore
-
-# Linux/Mac (터미널)
-nano .gitignore
-이 내용을 붙여넣기:
-
-Copy# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-ENV/
-
-# 데이터 (너무 크므로 git 제외)
-data/historical/
-data/current/
-*.csv
-
-# 설정 (민감한 정보)
-config.local.py
-.env
-telegram_token.txt
-google_cloud_key.json
-secrets/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# 로그
-logs/
-*.log
-
-# 캐시
-.cache/
-*.cache
-
-# JSON 저장소 (자주 바뀌므로)
-initial_params.json
-realtime_performance.json
-params_updated.json
-active_coins.json
-weekly_optimized_params.json
-
-# OS
-.DS_Store
-Thumbs.db
-Step 4: 마스터 문서 저장
-프로젝트 폴더에 이 파일들을 생성:
-
-Copy# 프로젝트 폴더 구조
-crypto-trading-bot-ai/
-├── PROJECT_MASTER_PLAN.md          ← 이 파일
-├── IMPLEMENTATION_CHECKLIST.md     ← 이 파일
-├── README.md                       ← 기본 설명
-├── requirements.txt
-├── src/
-│   ├── __init__.py
-│   ├── config.py
-│   ├── main.py
-│   ├── modules/
-│   │   ├── indicators.py
-│   │   ├── data_loader.py
-│   │   └── performance_tracker.py
-│   ├── optimizers/
-│   │   ├── regression_optimizer.py
-│   │   ├── genetic_optimizer.py
-│   │   └── reinforcement_learner.py
-│   ├── simulator/
-│   │   └── unified_simulator.py
-│   └── reporter/
-│       └── telegram_reporter.py
-├── tests/
-│   └── test_basic.py
-├── docs/
-│   └── ARCHITECTURE.md
-├── docker/
-│   └── Dockerfile
-├── .github/
-│   └── workflows/
-│       └── deploy.yml
-├── .gitignore
-└── data/  (git에 포함 안 됨)
-    ├── historical/
-    └── current/
+daily_report.json (일일 통계)
+telegram_alerts.log (알림 기록)
 Copy
-Step 5: 첫 커밋 및 푸시
-Copy# 모든 파일 추가
-git add .
+---
 
-# 커밋 메시지와 함께 커밋
-git commit -m "Initial commit: Project structure and master plan"
+## 📊 **전체 실행 흐름 (무한 반복)**
 
-# GitHub에 연결
-git remote add origin https://github.com/YOUR_USERNAME/crypto-trading-bot-ai.git
+초기화 (최초 1회) ↓ ┌─────────────────────────────────────────────────────┐ │ 매분: 실시간 거래 + 강화학습 │ │ - 1분 캔들 수집 │ │ - 신호 생성 (회귀분석 가중치) │ │ - 거래 실행 │ │ - Q값 업데이트 │ │ │ │ 결과: 일주일 데이터 축적 │ └─────────────────────────────────────────────────────┘ ↓ 매주 월요일 자정: 주간 재최적화 ├─ 지난주 데이터로 유전알고리즘 30세대 실행 ├─ "과거 최고(53.72%)" vs "현재 최고(?%)" 비교 ├─ 더 나은 파라미터로 업데이트 └─ 강화학습 Q-Table 선택적 조정 ↓ ┌─────────────────────────────────────────────────────┐ │ 매분: 실시간 거래 + 강화학습 (새 파라미터로) │ │ (이번주는 더 나은 파라미터로 거래) │ │ │ │ 결과: 한 달 데이터 축적 │ └─────────────────────────────────────────────────────┘ ↓ 매월 1일 자정: 월간 대규모 재최적화 ├─ 8년 과거 + 현재 1개월 데이터 통합 ├─ 회귀분석 재실행 (지표 가중치 재계산) ├─ 유전알고리즘 30세대 재실행 ├─ 강화학습 Q-Table 초기화 ├─ "과거" vs "주간" vs "월간" 종합 비교 └─ 새로운 파라미터로 다음달 거래 ↓ [무한 반복]
 
-# 메인 브랜치로 변경
-git branch -M main
+최종 결과:
 
-# 업로드
-git push -u origin main
-Step 6: 확인
-브라우저에서 https://github.com/YOUR_USERNAME/crypto-trading-bot-ai 접속해서 파일들이 올라왔는지 확인!
+매주: 파라미터 점진적 개선 (현재 시장에 적응)
+매월: 파라미터 대규모 진화 (시장 변화 반영)
+지속적으로: 승률 ↑, 손실률 ↓
+Copy
+---
 
-📝 앞으로의 워크플로우
-코드를 수정한 후 계속 업로드:
+## 🔄 **파라미터 버전 관리 (수정됨)**
 
-Copy# 1. 변경사항 확인
-git status
+| 파일 | 생성 시기 | 용도 | 기반 데이터 | 특징 |
+|------|---------|------|-----------|------|
+| `initial_params.json` | 초기화 (1회) | 기준점 | 8년 과거 | 초기 최고 성과 |
+| `weekly_optimized_params.json` | 매주 월요일 | 단기 최적화 | 최근 1주 | 현재 시장에 맞춤 |
+| `monthly_optimized_params.json` | 매월 1일 | 장기 최적화 | 8년 + 1개월 | 시장 변화 반영 |
+| `params_updated.json` | 매분 업데이트 | 실시간 추적 | 강화학습 | Q값 미세 조정 |
 
-# 2. 변경된 파일 추가
-git add .
+**적용 순서:**
+1. **초기:** `initial_params.json` 사용
+2. **매주 월요일 후:** `weekly_optimized_params.json` 사용 (더 나으면)
+3. **매월 1일 후:** `monthly_optimized_params.json` 사용 (더 나으면)
+4. **매분:** `params_updated.json`으로 미세 조정 (강화학습)
 
-# 3. 커밋
-git commit -m "Implement Phase 1: Data loader and parameter manager"
+---
 
-# 4. 푸시
-git push origin main
+## 💰 **실제 동작 시나리오**
+
+### **Week 1 (초기화)**
+Phase 1-5까지 8년 과거 데이터 분석 완료 → initial_params.json 생성 → 승률: 53.72% (이것이 기준점) → 이 파라미터로 실시간 거래 시작
+
+1주간 실시간 거래 결과:
+
+거래 52건
+승률: 50.0% (과거 53.72% 대비 ↓ 2.72p)
+수익률: -1.2%
+분석: "어? 지난주는 과거보다 떨어졌네?" 원인: 현재 시장 상황이 과거와 다름
+
+Copy
+---
+
+### **Week 2 (월요일 자정 - 주간 재최적화)**
+"지난주 데이터로 더 최적화할 수 있을까?" → 지난주 52건 거래 데이터로 유전알고리즘 30세대 실행 → weekly_optimized_params.json 생성 → 승률 예상: 58.3% (과거 53.72% 대비 ↑ 4.58p)
+
+비교 분석:
+
+과거 최고: 53.72%
+현재 최고: 58.3% → "현재가 더 낫다!" → weekly_optimized_params.json으로 교체
+이번주는 새로운 파라미터로 거래:
+
+거래 48건
+승률: 55.2% (새 파라미터로 개선 ↑)
+수익률: +0.5%
+Copy
+---
+
+### **Week 3-4 (계속 진행)**
+매주 월요일마다 반복:
+
+지난주 거래 데이터 분석
+유전알고리즘 30세대 재실행
+더 나은 파라미터 발견 시 업데이트
+결과:
+
+Week 3: 승률 58.8%, 수익률 +1.3%
+Week 4: 승률 60.2%, 수익률 +1.8%
+추세: 매주마다 승률이 점진적으로 상승 ↑
+
+Copy
+---
+
+### **Month 1 (1일 자정 - 월간 대규모 재최적화)**
+4주간 실시간 데이터가 축적됨 → 8년 과거 데이터 + 현재 1개월 데이터 통합
+
+"지난 1개월, 시장이 어떻게 변했나?" → 회귀분석 재실행: 지표 가중치 재계산
+
+예시 - 지표 가중치 변화: 이전 (8년): RSI 15% → MACD 8% → Bollinger 12% → ... 현재 (1개월 포함): MACD 20% → RSI 12% → Stochastic 14% → ...
+
+→ 시장에서 MACD의 중요도가 올라감!
+
+→ 새로운 가중치로 유전알고리즘 30세대 재실행 → monthly_optimized_params.json 생성 → 승률 예상: 64.5% (월간 최고)
+
+종합 비교:
+
+과거 최고: 53.72%
+주간 최고: 61.1%
+월간 최고: 64.5% → "월간이 가장 낫다!" → monthly_optimized_params.json으로 교체
+강화학습 Q-Table 초기화:
+
+새로운 파라미터로 새로운 환경 학습 시작
+다음달: 새로운 파라미터 + 새로운 Q-Table로 거래
+
+Copy
+---
+
+## 📋 **Phase별 재실행 계획 (수정됨)**
+
+| Phase | 초기화 | 주간 | 월간 | 역할 |
+|-------|-------|------|------|------|
+| **Phase 2: 회귀분석** | ✅ 1회 | ❌ | ✅ | 지표 가중치 계산 |
+| **Phase 3: 유전 알고리즘** | ✅ 1회 | ✅ 매주 | ✅ 매월 | 파라미터 조합 최적화 |
+| **Phase 4: 강화학습** | ✅ 1회 | ❌ | ✅ 초기화 | Q-Table 실시간 업데이트 |
+| **Phase 5: 통합 시뮬레이터** | ✅ 1회 | ✅ 리포트 | ✅ 리포트 | 전체 오케스트레이션 |
+
+**핵심:**
+- Phase 2 (회귀분석): 월간 1회 재실행 → 시장 변화 반영
+- Phase 3 (유전 알고리즘): 주간 1회 + 월간 1회 재실행 → 파라미터 진화
+- Phase 4 (강화학습): 매분 + 월간 초기화 → 실시간 학습
+- Phase 5 (통합): 계속 운영 → 모든 것 조율
+
+---
+
+## ✅ **완전 수정된 체크리스트**
+
+### Phase 5 구현 진행도
+- [x] **1단계: 초기화** (8년 과거 데이터 분석) - 완료 (309거래, 53.72% 승률)
+- [ ] **2단계: 매분 실시간 거래 루프** - 구현 예정
+- [ ] **3단계: 매주 주간 재최적화** - 구현 예정
+  - [ ] 지난주 거래 데이터 분석
+  - [ ] 유전알고리즘 30세대 재실행
+  - [ ] "과거 vs 현재" 비교 분석
+  - [ ] 파라미터 업데이트
+- [ ] **4단계: 매월 월간 대규모 재최적화** - 구현 예정
+  - [ ] 데이터 통합 (8년 + 1개월)
+  - [ ] 회귀분석 재실행
+  - [ ] 유전알고리즘 30세대 재실행
+  - [ ] Q-Table 초기화
+  - [ ] 종합 비교 분석
+- [ ] **5단계: 매일 일일 보고** - 구현 예정
+
+---
+
+## 🎯 **지금부터 구현할 것 (우선순위)**
+
+1. **Upbit API 실시간 데이터 수집 모듈** (1주)
+   - 50개 코인 1분 캔들 실시간 수집
+   - 네트워크 오류 처리
+
+2. **2단계: 매분 실시간 거래 루프 구현** (1주)
+   - 신호 생성 (회귀분석 가중치)
+   - 거래 실행
+   - 강화학습 Q값 업데이트
+
+3. **3단계: 매주 주간 재최적화 로직** (1주)
+   - 유전알고리즘 재실행 함수
+   - 비교 분석 로직
+   - 파라미터 자동 업데이트
+
+4. **4단계: 매월 월간 대규모 재최적화 로직** (1주)
+   - 회귀분석 재실행 함수
+   - 데이터 통합 로직
+   - Q-Table 초기화
+
+5. **Cloud Scheduler 설정** (3일)
+   - 매주 유전 알고리즘 자동 실행
+   - 매월 회귀분석 + 유전 알고리즘 자동 실행
+
+6. **Telegram 봇 연동 및 테스트** (2일)
+
+---
+
+## 📌 **핵심 수정 사항 정리**
+
+| 항목 | 이전 | 수정됨 |
+|------|------|-------|
+| 과거 백테스트 | 1회 | 매주/매월 반복 |
+| 회귀분석 | 초기화만 | 초기화 + 매월 |
+| 유전 알고리즘 | 초기화만 | 초기화 + 매주 + 매월 |
+| 강화학습 | 매분만 | 매분 + 월간 초기화 |
+| 파라미터 버전 | 2개 | 4개 (과거/주간/월간/실시간) |
+| 최적화 사이클 | 단순 | 복합 (매분/매주/매월) |
+| 시장 대응 | 느림 | 빠름 (매주 대응) |
+
+---
+
+**최종 결론:** 당신의 지적이 완전히 맞습니다! 과거 분석은 1회가 아니라 **반복 최적화**이며, 현재 데이터와 함께 **지속적으로 재조합**되어야 합니다.
