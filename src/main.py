@@ -34,7 +34,10 @@ from config import (
     DATA_DIR
 )
 
-# 로깅 설정
+# 로그 폴더 생성
+import os
+os.makedirs('logs', exist_ok=True)
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
