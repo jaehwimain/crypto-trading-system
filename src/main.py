@@ -73,6 +73,30 @@ def run_phase2(data_loader):
     
     return optimized_params
 
+def run_phase3(data_loader):
+    logger.info("\n" + "=" * 50)
+    logger.info("Phase 3: Genetic Algorithm")
+    logger.info("=" * 50)
+    
+    from optimizers.genetic_optimizer import GeneticOptimizer
+    
+    optimizer = GeneticOptimizer(data_loader, None)
+    test_coins = COINS[:3]
+    logger.info(f"\nEvolving {len(test_coins)} coins...")
+    
+    evolved_params = optimizer.optimize_all_coins(test_coins)
+    
+    if evolved_params:
+        param_manager = CoinParameterManager(DATA_DIR)
+        param_manager.save_params(evolved_params, "genetic_params.json")
+        logger.info(f"OK: Genetic params saved")
+    
+    logger.info("=" * 50)
+    logger.info("Phase 3 complete!")
+    logger.info("=" * 50)
+    
+    return evolved_params
+
 def main():
     logger.info(f"Starting: {Path(__file__).name}\n")
     
@@ -88,8 +112,14 @@ def main():
     if optimized:
         logger.info(f"\nOK: {len(optimized)} coins optimized")
     
+    logger.info("\nRunning Phase 3 (test with 3 coins)...")
+    evolved = run_phase3(data_loader)
+    
+    if evolved:
+        logger.info(f"\nOK: {len(evolved)} coins evolved")
+    
     logger.info("\n" + "="*50)
-    logger.info("Initialization and optimization complete!")
+    logger.info("Initialization, optimization and evolution complete!")
     logger.info("="*50)
 
 if __name__ == "__main__":
