@@ -1,11 +1,8 @@
 venv/
-
-# í™˜ê²½ë³€ìˆ˜ (API í‚¤ ë³´ì•ˆ!)
 .env
 .env.local
 .env.*.local
 
-# Python
 __pycache__/
 *.pyc
 *.pyo
@@ -14,23 +11,19 @@ dist/
 build/
 .Python
 
-# IDE
 .vscode/
 .idea/
 *.swp
 
-# OS
 .DS_Store
 Thumbs.db
 
-# ë¡œê·¸
 *.log
-logs/
 
-# ë°ì´í„°
-data/
 *.db
 *.csv
 
-# JSON í‚¤ íŒŒì¼ (Google Cloud)
-*.json
+# ¹Î°¨ÇÑ Á¤º¸ (API Å°, ÀÎÁõ¼­ µî)
+config_secret.json
+credentials.json
+service_account.json
