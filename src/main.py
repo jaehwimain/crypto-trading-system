@@ -97,6 +97,25 @@ def run_phase3(data_loader):
     
     return evolved_params
 
+def run_phase4(data_loader):
+    logger.info("\n" + "=" * 50)
+    logger.info("Phase 4: Reinforcement Learning")
+    logger.info("=" * 50)
+    
+    from optimizers.reinforcement_learner import ReinforcementLearner
+    
+    learner = ReinforcementLearner(data_loader, None)
+    test_coins = COINS[:2]
+    logger.info(f"\nTraining {len(test_coins)} coins...")
+    
+    training_results = learner.train_all_coins(test_coins, num_episodes=5)
+    
+    logger.info("=" * 50)
+    logger.info("Phase 4 complete!")
+    logger.info("=" * 50)
+    
+    return training_results
+
 def main():
     logger.info(f"Starting: {Path(__file__).name}\n")
     
@@ -118,8 +137,14 @@ def main():
     if evolved:
         logger.info(f"\nOK: {len(evolved)} coins evolved")
     
+    logger.info("\nRunning Phase 4 (test with 2 coins)...")
+    trained = run_phase4(data_loader)
+    
+    if trained:
+        logger.info(f"\nOK: {len(trained)} coins trained")
+    
     logger.info("\n" + "="*50)
-    logger.info("Initialization, optimization and evolution complete!")
+    logger.info("All phases complete!")
     logger.info("="*50)
 
 if __name__ == "__main__":
