@@ -101,3 +101,33 @@ WEEKLY_OPTIMIZE_HOUR = 0  # 월요일 자정
 # ============================================
 LOG_LEVEL = "INFO"
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# ============================================
+# 📁 파라미터 파일 경로
+# ============================================
+PARAMS_DIR = DATA_DIR / "params"
+PARAMS_DIR.mkdir(exist_ok=True)
+
+INITIAL_PARAMS_FILE = PARAMS_DIR / "initial_params.json"
+CURRENT_PARAMS_FILE = PARAMS_DIR / "params_updated.json"
+WEEKLY_PARAMS_FILE = PARAMS_DIR / "weekly_optimized_params.json"
+MONTHLY_PARAMS_FILE = PARAMS_DIR / "monthly_optimized_params.json"
+
+# ============================================
+# 📊 성과 추적 파일
+# ============================================
+PERFORMANCE_DIR = DATA_DIR / "performance"
+PERFORMANCE_DIR.mkdir(exist_ok=True)
+
+PERFORMANCE_FILE = PERFORMANCE_DIR / "realtime_performance.json"
+ACTIVE_COINS_FILE = PERFORMANCE_DIR / "active_coins.json"
+
+# ============================================
+# 📈 리포트 파일
+# ============================================
+REPORTS_DIR = DATA_DIR / "reports"
+REPORTS_DIR.mkdir(exist_ok=True)
+
+DAILY_REPORT_FILE = REPORTS_DIR / "daily_report.json"
+WEEKLY_REPORT_FILE = REPORTS_DIR / "weekly_report.json"
+MONTHLY_REPORT_FILE = REPORTS_DIR / "monthly_report.json"
