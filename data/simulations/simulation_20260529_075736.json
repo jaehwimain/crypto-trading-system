@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-05-29T07:57:36.977087+00:00",
+  "buy_signals": 0,
+  "sell_signals": 0,
+  "hold_signals": 0,
+  "portfolio_stats": {
+    "initial_balance": 100000,
+    "current_equity": 100000,
+    "total_return_percent": 0.0,
+    "total_pnl": 0,
+    "balance": 100000,
+    "open_positions": 0,
+    "total_trades": 0,
+    "winning_trades": 0,
+    "losing_trades": 0,
+    "win_rate": 0
+  },
+  "top_buy_signals": [],
+  "top_sell_signals": []
+}

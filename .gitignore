@@ -21,9 +21,8 @@ Thumbs.db
 *.log
 
 *.db
-*.csv
 
-# 민감한 정보 (API 키, 인증서 등)
+# 민감한 정보만 제외
 config_secret.json
 credentials.json
 service_account.json

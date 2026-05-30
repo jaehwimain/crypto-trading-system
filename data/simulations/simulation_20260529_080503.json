@@ -1,0 +1,58 @@
+{
+  "timestamp": "2026-05-29T08:05:03.855260+00:00",
+  "buy_signals": 2,
+  "sell_signals": 4,
+  "hold_signals": 40,
+  "top_buy_signals": [
+    {
+      "symbol": "ETH/USDT",
+      "action": "BUY",
+      "confidence": 0.22798515293267968,
+      "score": 61.399257646633984,
+      "reason": "약한 매수신호 (점수: 61.4)",
+      "timestamp": "2026-05-29T08:05:03.174373+00:00"
+    },
+    {
+      "symbol": "BTC/USDT",
+      "action": "BUY",
+      "confidence": 0.2262922130359253,
+      "score": 61.314610651796265,
+      "reason": "약한 매수신호 (점수: 61.3)",
+      "timestamp": "2026-05-29T08:05:03.033599+00:00"
+    }
+  ],
+  "top_sell_signals": [
+    {
+      "symbol": "PENDLE/USDT",
+      "action": "SELL",
+      "confidence": 0.21298495830961983,
+      "score": 39.35075208451901,
+      "reason": "약한 매도신호 (점수: 39.4)",
+      "timestamp": "2026-05-29T08:05:03.504295+00:00"
+    },
+    {
+      "symbol": "JUP/USDT",
+      "action": "SELL",
+      "confidence": 0.24704991171549465,
+      "score": 37.64750441422527,
+      "reason": "약한 매도신호 (점수: 37.6)",
+      "timestamp": "2026-05-29T08:05:03.314186+00:00"
+    },
+    {
+      "symbol": "STRK/USDT",
+      "action": "SELL",
+      "confidence": 0.2656443041794181,
+      "score": 36.717784791029096,
+      "reason": "약한 매도신호 (점수: 36.7)",
+      "timestamp": "2026-05-29T08:05:03.690546+00:00"
+    },
+    {
+      "symbol": "BLUR/USDT",
+      "action": "SELL",
+      "confidence": 0.2792901431574167,
+      "score": 36.035492842129166,
+      "reason": "약한 매도신호 (점수: 36.0)",
+      "timestamp": "2026-05-29T08:05:02.984417+00:00"
+    }
+  ]
+}
