@@ -409,7 +409,7 @@ def run_telegram_in_background():
         loop.run_until_complete(telegram_handler.start())
         
     except Exception as e:
-        logger.error(f"❌ Telegram 봇 오류: {e}")
+        logger.error(f"❌ Telegram 봇 오류: {e}", exc_info=True)  # exc_info=True 추가
 
 def run_optimizer_in_background():
     """백그라운드에서 연속 최적화 엔진 실행"""
@@ -426,7 +426,8 @@ def run_optimizer_in_background():
         loop.run_until_complete(optimizer_instance.start())
         
     except Exception as e:
-        logger.error(f"❌ 옵티마이저 오류: {e}")
+        logger.error(f"❌ 옵티마이저 오류: {e}", exc_info=True)  # exc_info=True 추가
+
 
 # ============================================================================
 # 메인 실행
@@ -456,7 +457,6 @@ def main():
     # 4. Flask 서버를 포트 8080에서 실행 (메인 스레드)
     port = int(os.environ.get('PORT', 8080))
     logger.info(f"🌐 Flask 서버 시작: 포트 {port}")
+    
+    # threaded=True를 추가해서 Telegram/Optimizer 스레드가 동시에 실행 가능하게
     app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False, threaded=True)
-
-if __name__ == "__main__":
-    main()
