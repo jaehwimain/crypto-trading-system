@@ -1,0 +1,15 @@
+{
+  "simulation_id": "20260531_202526",
+  "initial_capital": 100000,
+  "final_value": 100000,
+  "profit": 0,
+  "profit_rate": 0.0,
+  "total_trades": 0,
+  "win_count": 0,
+  "loss_count": 0,
+  "win_rate": 0,
+  "elapsed_time_minutes": 0,
+  "start_time": "2026-05-31T20:25:26.707076",
+  "end_time": "2026-05-31T20:26:02.677757",
+  "trades": []
+}

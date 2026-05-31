@@ -1,0 +1,7 @@
+{
+  "rsi_upper": 70,
+  "rsi_lower": 30,
+  "ma_period": 20,
+  "stop_loss": -0.025,
+  "take_profit": 0.05
+}
