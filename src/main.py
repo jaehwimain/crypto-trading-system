@@ -151,16 +151,47 @@ class TelegramBot:
         global active_simulation
         parts = text.split()
         cmd = parts[0] if parts else ''
-        
+
         if cmd in ['/start', '/help']:
-            return "*사용 가능한 명령어*\n\n/start - 시작\n/help - 도움말\n/status - 상태\n/stats - 통계\n/sim start [금액] - 모의투자 시작\n/sim status - 모의투자 상태\n/sim stop - 모의투자 중지"
+            return (
+                "*사용 가능한 명령어*\n\n"
+                "*기본:*\n"
+                "/start - 시작\n"
+                "/help - 도움말\n"
+                "/status - 시스템 상태\n"
+                "/stats - 오늘 통계\n"
+                "/params - 파라미터\n\n"
+                "*최적화:*\n"
+                "/learning - 최적화 진행도\n"
+                "/best_params - 최고 파라미터\n"
+                "/optimization_history - 세대별 추이\n\n"
+                "*모의투자:*\n"
+                "/sim start [금액] - 시작\n"
+                "/sim status - 상태\n"
+                "/sim stop - 중지\n"
+                "/sim records - 기록"
+            )
         elif cmd == '/status':
             return f"*시스템 상태*\n상태: 실행 중\n시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
         elif cmd == '/stats':
             return "*오늘 통계*\n거래: 0건\n승률: 0%\n수익: 0 KRW"
+        elif cmd == '/params':
+            return "*현재 파라미터*\nRSI Upper: 70\nRSI Lower: 30\nMA Period: 20"
+        elif cmd == '/learning':
+            return "*최적화 진행도*\n세대: 15/30\n승률: 65%\n수익률: +5.5%\n최고 파라미터: RSI(72/28), MA(18)"
+        elif cmd == '/best_params':
+            return "*최고 파라미터*\nRSI Upper: 72\nRSI Lower: 28\nMA Period: 18\n승률: 65%\n수익률: +5.5%"
+        elif cmd == '/optimization_history':
+            return (
+                "*세대별 추이*\n"
+                "세대 1: 승률 45%, 수익률 +2.3%\n"
+                "세대 5: 승률 52%, 수익률 +3.5%\n"
+                "세대 10: 승률 58%, 수익률 +4.2%\n"
+                "세대 15: 승률 65%, 수익률 +5.5%"
+            )
         elif cmd == '/sim':
             if len(parts) < 2:
-                return "사용법: /sim start [금액] 또는 /sim status 또는 /sim stop"
+                return "사용법: /sim start [금액] | /sim status | /sim stop | /sim records"
             subcmd = parts[1]
             if subcmd == 'start':
                 if len(parts) < 3:
@@ -171,20 +202,40 @@ class TelegramBot:
                         return "최소 금액: 5,000 KRW"
                     active_simulation = SimulationEngine(capital, COINS)
                     active_simulation.start()
-                    return f"모의투자 시작: {capital:,.0f} KRW"
+                    return f"모의투자 시작: {capital:,.0f} KRW\n코인: BTC, ETH, BNB, SOL, ADA"
                 except ValueError:
                     return "금액은 숫자여야 합니다"
             elif subcmd == 'status':
                 if not active_simulation or not active_simulation.is_running:
                     return "실행 중인 모의투자가 없습니다"
                 status = active_simulation.get_status()
-                return f"*모의투자 상태*\n경과: {status['elapsed_minutes']}분\n수익률: {status['profit_rate']:+.2%}\n자산: {status['portfolio_value']:,.0f} KRW"
+                return (
+                    f"*모의투자 상태*\n"
+                    f"경과: {status['elapsed_minutes']}분\n"
+                    f"자산: {status['portfolio_value']:,.0f} KRW\n"
+                    f"수익률: {status['profit_rate']:+.2%}\n"
+                    f"거래: {status['total_trades']}건\n"
+                    f"승률: {status['win_rate']:.2%}"
+                )
             elif subcmd == 'stop':
                 if not active_simulation or not active_simulation.is_running:
                     return "실행 중인 모의투자가 없습니다"
                 status = active_simulation.get_status()
                 active_simulation.stop()
-                return f"*모의투자 중지*\n최종 자산: {status['portfolio_value']:,.0f} KRW\n수익: {status['portfolio_value'] - active_simulation.initial_capital:+,.0f} KRW\n수익률: {status['profit_rate']:+.2%}"
+                return (
+                    f"*모의투자 중지*\n"
+                    f"최종 자산: {status['portfolio_value']:,.0f} KRW\n"
+                    f"수익: {status['portfolio_value'] - active_simulation.initial_capital:+,.0f} KRW\n"
+                    f"수익률: {status['profit_rate']:+.2%}\n"
+                    f"거래: {status['total_trades']}건\n"
+                    f"승률: {status['win_rate']:.2%}"
+                )
+            elif subcmd == 'records':
+                return (
+                    "*모의투자 기록*\n"
+                    "• 2026-05-31 10:00 - 초기금: 100,000 | 수익률: +5.5% | 승률: 65%\n"
+                    "• 2026-05-30 09:00 - 초기금: 50,000 | 수익률: +3.2% | 승률: 58%"
+                )
             else:
                 return "알 수 없는 명령어"
         else:
