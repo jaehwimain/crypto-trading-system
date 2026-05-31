@@ -15,10 +15,12 @@ import sys
 import json
 import time
 import logging
+import threading
 from datetime import datetime, timedelta
 from pathlib import Path
 import pandas as pd
 from typing import Dict, List, Optional
+from flask import Flask, jsonify
 
 # 상위 디렉토리를 Python path에 추가
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -34,6 +36,9 @@ from config import (
     DATA_DIR
 )
 
+# Flask 앱 생성
+app = Flask(__name__)
+
 # 로그 폴더 생성
 import os
 os.makedirs('logs', exist_ok=True)
@@ -47,6 +52,9 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
+# 전역 변수
+trading_bot = None
 
 
 class TradingBot:
@@ -196,6 +204,7 @@ class TradingBot:
             }
         }
         
+        Path('data/performance').mkdir(parents=True, exist_ok=True)
         with open(PERFORMANCE_FILE, 'w') as f:
             json.dump(performance, f, indent=2)
         
@@ -205,6 +214,7 @@ class TradingBot:
             'last_updated': datetime.now().isoformat()
         }
         
+        Path('data/active').mkdir(parents=True, exist_ok=True)
         with open(ACTIVE_COINS_FILE, 'w') as f:
             json.dump(active_coins, f, indent=2)
         
@@ -415,22 +425,61 @@ class TradingBot:
                     logger.error(f"❌ 일일 보고 실패: {e}")
 
 
+# ============================================================================
+# Flask 웹 서버 라우트 (Cloud Run 필수)
+# ============================================================================
+
+@app.route('/health', methods=['GET'])
+def health():
+    """헬스 체크 엔드포인트"""
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': datetime.now().isoformat(),
+        'service': 'crypto-trading-bot',
+        'bot_initialized': trading_bot.initialized if trading_bot else False
+    }), 200
+
+
+@app.route('/status', methods=['GET'])
+def status():
+    """상태 조회 엔드포인트"""
+    if trading_bot is None:
+        return jsonify({
+            'status': 'initializing',
+            'message': 'Bot is being initialized'
+        }), 200
+    
+    return jsonify({
+        'status': 'running',
+        'initialized': trading_bot.initialized,
+        'timestamp': datetime.now().isoformat()
+    }), 200
+
+
+def run_bot_in_background():
+    """백그라운드에서 거래 봇 실행"""
+    global trading_bot
+    
+    try:
+        trading_bot = TradingBot()
+        trading_bot.initialize()
+        trading_bot.realtime_loop()
+    except Exception as e:
+        logger.error(f"❌ 백그라운드 봇 오류: {e}")
+
+
 def main():
     """메인 실행 함수"""
     
-    try:
-        # 봇 생성
-        bot = TradingBot()
-        
-        # 초기화 (최초 1회)
-        bot.initialize()
-        
-        # 매분 실시간 거래 루프 시작
-        bot.realtime_loop()
-        
-    except Exception as e:
-        logger.error(f"❌ 프로그램 오류: {e}")
-        raise
+    # 거래 봇을 백그라운드 스레드에서 실행
+    bot_thread = threading.Thread(target=run_bot_in_background, daemon=True)
+    bot_thread.start()
+    logger.info("✅ 거래 봇 스레드 시작")
+    
+    # Flask 서버를 포트 8080에서 실행 (메인 스레드)
+    port = int(os.environ.get('PORT', 8080))
+    logger.info(f"🌐 Flask 서버 시작: 포트 {port}")
+    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
 
 
 if __name__ == "__main__":
