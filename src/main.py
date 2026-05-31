@@ -496,14 +496,11 @@ def main():
     port = int(os.environ.get('PORT', 8080))
     logger.info(f"🌐 Flask 서버 포트 설정: {port}")
     
-    # 백그라운드 스레드 시작 (빠르게)
+    # 백그라운드 스레드 시작 (데몬이 아님 - 별도 스레드)
     try:
         start_bot_thread()
-        time.sleep(0.5)
         start_optimizer_thread()
-        time.sleep(0.5)
         start_telegram_thread()
-        time.sleep(0.5)
     except Exception as e:
         logger.error(f"백그라운드 스레드 시작 오류: {e}")
     
