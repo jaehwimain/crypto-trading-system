@@ -40,9 +40,9 @@ from config import (
 )
 
 from reporter.telegram_reporter import TelegramReporter
-#from reporter.telegram_command_handler import TelegramCommandHandler
+from reporter.telegram_command_handler import TelegramCommandHandler
 from optimizers.continuous_optimizer import ContinuousOptimizer
-#from simulator.simulation_engine import SimulationEngine
+from simulator.simulation_engine import SimulationEngine
 
 # Flask 앱 생성
 app = Flask(__name__)
