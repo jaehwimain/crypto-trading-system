@@ -496,15 +496,7 @@ def main():
     port = int(os.environ.get('PORT', 8080))
     logger.info(f"🌐 Flask 서버 포트 설정: {port}")
     
-    # 백그라운드 스레드 시작 (데몬이 아님 - 별도 스레드)
-    try:
-        start_bot_thread()
-        start_optimizer_thread()
-        start_telegram_thread()
-    except Exception as e:
-        logger.error(f"백그라운드 스레드 시작 오류: {e}")
-    
-    # Flask 서버 시작 (포트 8080 리스닝 - Cloud Run 필수)
+    # Flask만 실행 (백그라운드 스레드 제거)
     logger.info(f"🌐 Flask 서버 시작: 포트 {port}")
     app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False, threaded=True)
 
