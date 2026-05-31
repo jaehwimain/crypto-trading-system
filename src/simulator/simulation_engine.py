@@ -1,6 +1,7 @@
 """
 src/simulator/simulation_engine.py
 모의투자 엔진 – 실제 거래 로직과 동일한 방식으로 작동
+[최적화] Lazy loading으로 TelegramReporter, UpbitClient 초기화 지연
 """
 
 import os
@@ -15,9 +16,7 @@ from dataclasses import dataclass, asdict
 # 기존 모듈 임포트
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from reporter.telegram_reporter import TelegramReporter
 from simulator.virtual_portfolio import VirtualPortfolio, Position
-from api.upbit_client import UpbitClient
 
 # 로깅 설정
 logger = logging.getLogger(__name__)
@@ -37,6 +36,7 @@ class SimulationEngine:
     """
     실제 거래 엔진과 동일한 로직으로 모의투자 실행
     – 실제 TradingBot의 signal 생성 및 포지션 크기 결정 로직 재사용
+    [최적화] TelegramReporter, UpbitClient는 필요할 때 로드
     """
 
     _active_simulation: Optional['SimulationEngine'] = None
@@ -50,8 +50,10 @@ class SimulationEngine:
         self.config = config
         self.trading_bot = trading_bot_instance
         self.portfolio = VirtualPortfolio(config.initial_capital)
-        self.telegram_reporter = TelegramReporter()
-        self.upbit_client = UpbitClient()
+        
+        # Lazy loading 속성
+        self._telegram_reporter = None
+        self._upbit_client = None
         
         # 설정: 파라미터가 제공되지 않으면 현재 최적 파라미터 로드
         if config.params is None:
@@ -66,6 +68,24 @@ class SimulationEngine:
         logger.info(f"[모의투자] 초기 자본: {config.initial_capital:,.0f} KRW")
         logger.info(f"[모의투자] 코인 수: {len(config.coins)}")
         logger.info(f"[모의투자] 파라미터: {self.config.params}")
+
+    @property
+    def telegram_reporter(self):
+        """TelegramReporter 지연 로드"""
+        if self._telegram_reporter is None:
+            from reporter.telegram_reporter import TelegramReporter
+            self._telegram_reporter = TelegramReporter()
+            logger.debug("[모의투자] TelegramReporter 로드됨")
+        return self._telegram_reporter
+
+    @property
+    def upbit_client(self):
+        """UpbitClient 지연 로드"""
+        if self._upbit_client is None:
+            from api.upbit_client import UpbitClient
+            self._upbit_client = UpbitClient()
+            logger.debug("[모의투자] UpbitClient 로드됨")
+        return self._upbit_client
 
     def _load_current_params(self) -> Dict:
         """현재 최적 파라미터 로드"""
@@ -99,9 +119,12 @@ class SimulationEngine:
         logger.info(f"[모의투자] 시작 – {self.portfolio.get_portfolio_value():,.0f} KRW")
         
         # Telegram에 시작 알림
-        await self.telegram_reporter.send_simulation_start_response(
-            self.portfolio.initial_capital
-        )
+        try:
+            await self.telegram_reporter.send_simulation_start_response(
+                self.portfolio.initial_capital
+            )
+        except Exception as e:
+            logger.warning(f"[모의투자] Telegram 시작 알림 실패: {e}")
         
         # 거래 루프 시작
         await self._execute_trading_loop()
@@ -333,7 +356,10 @@ class SimulationEngine:
         await self._save_results(summary)
         
         # Telegram 보고
-        await self.telegram_reporter.send_simulation_stop_response(summary)
+        try:
+            await self.telegram_reporter.send_simulation_stop_response(summary)
+        except Exception as e:
+            logger.warning(f"[모의투자] Telegram 결과 보고 실패: {e}")
         
         SimulationEngine._active_simulation = None
 

@@ -1,6 +1,7 @@
 """
 src/reporter/telegram_command_handler.py
 Telegram 명령어 핸들러 – 모의투자 엔진과 실제 거래 데이터 연동
+[최적화] Lazy loading으로 TelegramReporter, UpbitClient 초기화 지연
 """
 
 import os
@@ -15,15 +16,10 @@ from telegram.ext import (
     Application,
     CommandHandler,
     ContextTypes,
-    ConversationHandler
 )
 
 # 경로 설정
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from reporter.telegram_reporter import TelegramReporter
-from simulator.simulation_engine import SimulationEngine, SimulationConfig
-from api.upbit_client import UpbitClient
 
 logger = logging.getLogger(__name__)
 
@@ -40,12 +36,44 @@ class TelegramCommandHandler:
         """
         self.token = token
         self.chat_id = chat_id
-        self.reporter = TelegramReporter()
         self.trading_bot = trading_bot_instance
-        self.upbit_client = UpbitClient()
         self.application = None
         
-        logger.info("[Telegram] 명령어 핸들러 초기화")
+        # Lazy loading 속성
+        self._reporter = None
+        self._upbit_client = None
+        self._simulation_engine = None
+        
+        logger.info("[Telegram] 명령어 핸들러 초기화 (Lazy Loading)")
+
+    @property
+    def reporter(self):
+        """TelegramReporter 지연 로드"""
+        if self._reporter is None:
+            from reporter.telegram_reporter import TelegramReporter
+            self._reporter = TelegramReporter()
+            logger.debug("[Telegram] TelegramReporter 로드됨")
+        return self._reporter
+
+    @property
+    def upbit_client(self):
+        """UpbitClient 지연 로드"""
+        if self._upbit_client is None:
+            from api.upbit_client import UpbitClient
+            self._upbit_client = UpbitClient()
+            logger.debug("[Telegram] UpbitClient 로드됨")
+        return self._upbit_client
+
+    @property
+    def simulation_engine(self):
+        """SimulationEngine 지연 로드"""
+        if self._simulation_engine is None:
+            from simulator.simulation_engine import SimulationEngine
+            self._simulation_engine = SimulationEngine
+            logger.debug("[Telegram] SimulationEngine 로드됨")
+        return self._simulation_engine
+
+    # ======================== 명령어 핸들러 ========================
 
     async def start_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """
@@ -131,8 +159,8 @@ class TelegramCommandHandler:
                 f"승률: {stats['win_rate']:.2%}\n"
                 f"총 수익: {stats['total_profit']:+,.0f} KRW\n"
                 f"수익률: {stats['profit_rate']:+.2%}\n"
-                f"최대 수익 거래: {stats['max_profit_trade']}\n"
-                f"최대 손실 거래: {stats['max_loss_trade']}"
+                f"최대 수익 거래: {stats['max_profit_trade']:+,.0f}\n"
+                f"최대 손실 거래: {stats['max_loss_trade']:+,.0f}"
             )
             await update.message.reply_text(response, parse_mode='Markdown')
             logger.info(f"[Telegram] /통계 – 사용자: {update.effective_user.id}")
@@ -231,8 +259,8 @@ class TelegramCommandHandler:
                 f"승률: {analysis['win_rate']:.2%}\n"
                 f"수익: {analysis['profit']:+,.0f} KRW\n"
                 f"수익률: {analysis['profit_rate']:+.2%}\n"
-                f"최대 수익 거래: {analysis['best_trade']}\n"
-                f"최대 손실 거래: {analysis['worst_trade']}"
+                f"최대 수익 거래: {analysis['best_trade']:+,.0f}\n"
+                f"최대 손실 거래: {analysis['worst_trade']:+,.0f}"
             )
             await update.message.reply_text(response, parse_mode='Markdown')
             logger.info(f"[Telegram] /일일분석 {date_str} – 사용자: {update.effective_user.id}")
@@ -346,7 +374,7 @@ class TelegramCommandHandler:
             current_params = self._load_current_parameters()
             
             # 모의투자 시작
-            success = await SimulationEngine.start_simulation(
+            success = await self.simulation_engine.start_simulation(
                 initial_capital=initial_capital,
                 coins=['BTC', 'ETH', 'SOL', 'ADA', 'XRP', 'LINK', 'DOGE', 'MATIC'],
                 params=current_params,
@@ -357,7 +385,7 @@ class TelegramCommandHandler:
                 response = (
                     f"🚀 *모의투자 시작*\n\n"
                     f"초기 자본: {initial_capital:,.0f} KRW\n"
-                    f"현재 파라미터: {json.dumps(current_params, ensure_ascii=False, indent=2)}\n\n"
+                    f"현재 파라미터: 로드됨\n\n"
                     f"모의투자가 시작되었습니다. "
                     f"`/모의투자 현황` 으로 진행 상황을 확인하세요."
                 )
@@ -378,7 +406,7 @@ class TelegramCommandHandler:
         진행 중인 모의투자 상태
         """
         try:
-            simulation = SimulationEngine.get_active_simulation()
+            simulation = self.simulation_engine.get_active_simulation()
             
             if simulation is None:
                 await update.message.reply_text(
@@ -418,7 +446,7 @@ class TelegramCommandHandler:
         모의투자 중지 및 결과 보고
         """
         try:
-            summary = await SimulationEngine.stop_simulation("사용자 요청")
+            summary = await self.simulation_engine.stop_simulation("사용자 요청")
             
             if summary is None:
                 await update.message.reply_text(
