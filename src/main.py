@@ -487,19 +487,23 @@ def get_params():
 
 def main():
     """메인 실행 함수"""
-    
     logger.info("="*80)
-    logger.info("🚀 암호화폐 자동거래 AI 시스템 시작")
+    logger.info("🚀 Flask 서버 시작")
     logger.info("="*80)
     
-    # Flask 포트 설정
     port = int(os.environ.get('PORT', 8080))
-    logger.info(f"🌐 Flask 서버 포트 설정: {port}")
+    logger.info(f"🌐 서버 포트: {port}")
     
-    # Flask만 실행 (백그라운드 스레드 제거)
-    logger.info(f"🌐 Flask 서버 시작: 포트 {port}")
+    # Telegram 봇 시작 (백그라운드 스레드)
+    try:
+        from reporter.telegram_command_handler import TelegramCommandHandler
+        telegram_handler = TelegramCommandHandler(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID)
+        telegram_thread = threading.Thread(target=lambda: asyncio.run(telegram_handler.start()), daemon=True)
+        telegram_thread.start()
+        logger.info("✅ Telegram 봇 시작됨")
+    except Exception as e:
+        logger.warning(f"⚠️ Telegram 봇 시작 실패: {e}")
+    
+    logger.info(f"✅ Flask 실행 중...")
+    
     app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False, threaded=True)
-
-
-if __name__ == "__main__":
-    main()
