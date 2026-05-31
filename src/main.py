@@ -41,7 +41,7 @@ from config import (
 
 from reporter.telegram_reporter import TelegramReporter
 from reporter.telegram_command_handler import TelegramCommandHandler
-from optimizer.continuous_optimizer import ContinuousOptimizer
+from optimizers.continuous_optimizer import ContinuousOptimizer
 from simulator.simulation_engine import SimulationEngine
 
 # Flask 앱 생성
@@ -469,31 +469,6 @@ def health():
     }), 200
 
 
-@app.route('/status', methods=['GET'])
-def status():
-    """상태 조회 엔드포인트"""
-    if trading_bot is None:
-        return jsonify({
-            'status': 'initializing',
-            'message': 'Bot is being initialized'
-        }), 200
-    
-    uptime = datetime.now() - trading_bot.start_time
-    
-    return jsonify({
-        'status': 'running',
-        'initialized': trading_bot.initialized,
-        'is_running': trading_bot.is_running,
-        'uptime_seconds': uptime.total_seconds(),
-        'timestamp': datetime.now().isoformat(),
-        'components': {
-            'trading_bot': 'running' if trading_bot and trading_bot.is_running else 'stopped',
-            'telegram_bot': 'running' if telegram_handler else 'stopped',
-            'optimizer': 'running' if optimizer_instance and optimizer_instance.is_running else 'stopped'
-        }
-    }), 200
-
-
 @app.route('/params', methods=['GET'])
 def get_params():
     """현재 파라미터 조회"""
@@ -517,20 +492,22 @@ def main():
     logger.info("🚀 암호화폐 자동거래 AI 시스템 시작")
     logger.info("="*80)
     
-    # 1. 거래 봇 스레드 시작
-    start_bot_thread()
-    time.sleep(3)  # 초기화 대기
-    
-    # 2. 파라미터 최적화 스레드 시작
-    start_optimizer_thread()
-    time.sleep(1)
-    
-    # 3. Telegram 명령어 봇 스레드 시작
-    start_telegram_thread()
-    time.sleep(1)
-    
-    # 4. Flask 서버 시작 (메인 스레드)
+    # Flask 포트 설정
     port = int(os.environ.get('PORT', 8080))
+    logger.info(f"🌐 Flask 서버 포트 설정: {port}")
+    
+    # 백그라운드 스레드 시작 (빠르게)
+    try:
+        start_bot_thread()
+        time.sleep(0.5)
+        start_optimizer_thread()
+        time.sleep(0.5)
+        start_telegram_thread()
+        time.sleep(0.5)
+    except Exception as e:
+        logger.error(f"백그라운드 스레드 시작 오류: {e}")
+    
+    # Flask 서버 시작 (포트 8080 리스닝 - Cloud Run 필수)
     logger.info(f"🌐 Flask 서버 시작: 포트 {port}")
     app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False, threaded=True)
 

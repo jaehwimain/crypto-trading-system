@@ -14,8 +14,8 @@ import random
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from optimizer.data_accumulator import DataAccumulator
-from optimizer.parameter_validator import ParameterValidator, BacktestResult
+from optimizers.data_accumulator import DataAccumulator
+from optimizers.parameter_validator import ParameterValidator, BacktestResult
 
 logger = logging.getLogger(__name__)
 
